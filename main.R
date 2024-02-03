@@ -18,8 +18,14 @@ dataset <- dataset %>%
             pourcentage_blanc = total_blancs / sum(Votants) * 100, 
             total_abs = sum(as.numeric(Abstentions)), 
             pourcentage_abs = total_abs / sum(as.numeric(Inscrits))* 100,
-            total_arthaud = sum(Voix), 
-            pourcentage_arthaud = total_arthaud / total_votes * 100) 
+            total_arthaud = sum(VoixArthaud), 
+            pourcentage_arthaud = total_arthaud / total_votes * 100,
+            total_roussel = sum(VoixRoussel),
+            pourcentage_roussel = total_roussel / total_votes * 100,
+            total_macron = sum(VoixMacron),
+            pourcentage_macron = total_macron / total_votes * 100,
+            total_lassalle = sum(VoixLassalle),
+            pourcentage_lassalle = total_lassalle / total_votes * 100) 
 
 # Changement de noms de départements
 names(dataset)[1] <- "region"
@@ -29,7 +35,7 @@ dataset$region <- stri_trans_general(dataset$region, "Latin-ASCII") %>%
   str_replace_all("Corse-du-Sud", "Corse du Sud") %>%
   str_replace_all("Val-d'Oise", "Val-Doise") %>%
   str_replace_all("Corse-du-Sud", "Corse du Sud")
-
+# Apparence de la carte
 map_theme <- theme(title=element_text(),
                    plot.title=element_text(margin=margin(20,20,20,20), size=18, hjust = 0.5),
                    axis.text.x=element_blank(),
@@ -39,9 +45,9 @@ map_theme <- theme(title=element_text(),
                    axis.title.y=element_blank(),
                    panel.grid.major= element_blank(), 
                    panel.background= element_blank()) 
-
 result_map <- left_join(x = map[,-6], y = dataset)
-# Carte de test
+
+# Carte de test avec Nathalie Arthaud
 ggplot(result_map, aes(long,lat, group = group, fill = pourcentage_arthaud)) +
   geom_polygon() +
   coord_map() +
