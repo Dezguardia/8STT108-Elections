@@ -40,6 +40,35 @@ dataset_cleaned <- dataset %>%
             total_dupontaignan = sum(VoixDupontAignan),
             pourcentage_dupontaignan = total_dupontaignan / total_votes * 100) 
 
+#Moyenne des données
+moy_votes = mean(dataset_cleaned$total_votes)
+moy_abs = mean(dataset_cleaned$total_abs)
+moy_blanc = mean(dataset_cleaned$total_blancs)
+moy_votes_candidat <- c("N. Arthaud" = mean(dataset_cleaned$total_arthaud), 
+                       "P. Poutou" = mean(dataset_cleaned$total_poutou),
+                       "F. Roussel" = mean(dataset_cleaned$total_roussel),
+                       "J-L. Mélenchon" = mean(dataset_cleaned$total_melenchon),
+                       "A. Hidalgo" = mean(dataset_cleaned$total_hidalgo),
+                       "Y. Jadot" = mean(dataset_cleaned$total_jadot),
+                       "E. Macron" = mean(dataset_cleaned$total_macron), 
+                       "J. Lassalle" = mean(dataset_cleaned$total_lassalle),
+                       "V. Pecresse" = mean(dataset_cleaned$total_pecresse),
+                       "M. Le Pen" = mean(dataset_cleaned$total_lepen),
+                       "N. Dupont-Aignan" = mean(dataset_cleaned$total_dupontaignan),
+                       "É. Zemmour" = mean(dataset_cleaned$total_zemmour))
+
+print(moy_votes_candidat)
+
+etendue = max(moy_votes_candidat) - min(moy_votes_candidat)
+print(max(moy_votes_candidat))
+print(min(moy_votes_candidat))
+print(etendue)
+
+#en moyenne par region on a eu environs 328 345 votants
+#en moyenne par region on a eu 119 852 d'abstinence
+#en moyenne par region on a eu environs 5080 vote blanc
+#l'etendue des votes entre les candidat est d'environs 89588.45
+
 # Changement de noms de départements
 names(dataset_cleaned)[1] <- "region"
 dataset_cleaned$region <- stri_trans_general(dataset_cleaned$region, "Latin-ASCII") %>%
@@ -150,3 +179,4 @@ ggplot(result_map, aes(long, lat, group = group, fill = candidat_gagnant)) +
        title = "Candidat arrivé en tête par département au premier tour des présidentielles 2022", 
        subtitle = "Données via data.gouv") +
   map_theme
+
