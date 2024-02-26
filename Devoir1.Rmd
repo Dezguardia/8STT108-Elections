@@ -1,0 +1,108 @@
+---
+title: "Devoir Élections"
+author: "Gabriel Houdry--Bohême, Adem Bensalem, Milan Soragna, Hector Ménétrier, Serigne
+  Massamba Guèye"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ 
+## I. Présentation de la base de données 
+
+La base de données choisie est celle des résultats du premier tour des élections présidentielles françaises de 2022.
+Elle contient pour chaque commune française le résultat de votes de chaque candidat, avec les votes blancs et les abstensions.
+Afin de l'analyser, chargeons d'abord les bibliothèques nécessaires.
+```{r}
+library(tidyverse)
+library(stringr)
+library(stringi)
+library(readxl)
+library(dplyr)
+
+```
+## II. Analyse des votes par candidat
+
+Ensuite, nous devons effectuer un nettoyage des données. En effet, toutes les informations ne sont pas utiles pour la visualisation, et nous souhaitons les mettre sous une forme plus simple à analyser.
+Ici, pour une visualisation sous forme de carte, nous regroupons les résultats par département.
+```{r}
+
+# Récupération des résultats
+dataset <- read_xlsx("dataset_elections.xlsx")
+
+# Nettoyage des données et aggrégation des résultats
+dataset_cleaned <- dataset %>%
+  group_by(`Libellé du département`) %>%
+  summarise(total_votes = sum(Exprimés), 
+            total_blancs = sum(Blancs),
+            pourcentage_blanc = total_blancs / sum(Votants) * 100, 
+            total_abs = sum(as.numeric(Abstentions)), 
+            pourcentage_abs = total_abs / sum(as.numeric(Inscrits))* 100,
+            total_arthaud = sum(VoixArthaud), 
+            pourcentage_arthaud = total_arthaud / total_votes * 100,
+            total_roussel = sum(VoixRoussel),
+            pourcentage_roussel = total_roussel / total_votes * 100,
+            total_macron = sum(VoixMacron),
+            pourcentage_macron = total_macron / total_votes * 100,
+            total_lassalle = sum(VoixLassalle),
+            pourcentage_lassalle = total_lassalle / total_votes * 100,
+            total_lepen = sum(VoixLePen),
+            pourcentage_lepen = total_lepen / total_votes * 100,
+            total_zemmour = sum(VoixZemmour),
+            pourcentage_zemmour = total_zemmour / total_votes * 100,
+            total_melenchon = sum(VoixMelenchon),
+            pourcentage_melenchon = total_melenchon / total_votes * 100,
+            total_hidalgo = sum(VoixHidalgo),
+            pourcentage_hidalgo = total_hidalgo / total_votes * 100,
+            total_jadot = sum(VoixJadot),
+            pourcentage_jadot = total_jadot / total_votes * 100,
+            total_pecresse = sum(VoixPecresse),
+            pourcentage_pecresse = total_pecresse / total_votes * 100,
+            total_poutou = sum(VoixPoutou),
+            pourcentage_poutou = total_poutou / total_votes * 100,
+            total_dupontaignan = sum(VoixDupontAignan),
+            pourcentage_dupontaignan = total_dupontaignan / total_votes * 100)
+```
+
+Nous pouvons désormais observer la moyenne de votes par département pour chaque candidat.
+```{r}
+#Moyenne de vote de chaque candidat par département
+moy_votes = mean(dataset_cleaned$total_votes)
+moy_abs = mean(dataset_cleaned$total_abs)
+moy_blanc = mean(dataset_cleaned$total_blancs)
+moy_votes_candidat <- c("N. Arthaud" = mean(dataset_cleaned$total_arthaud), 
+                       "P. Poutou" = mean(dataset_cleaned$total_poutou),
+                       "F. Roussel" = mean(dataset_cleaned$total_roussel),
+                       "J-L. Mélenchon" = mean(dataset_cleaned$total_melenchon),
+                       "A. Hidalgo" = mean(dataset_cleaned$total_hidalgo),
+                       "Y. Jadot" = mean(dataset_cleaned$total_jadot),
+                       "E. Macron" = mean(dataset_cleaned$total_macron), 
+                       "J. Lassalle" = mean(dataset_cleaned$total_lassalle),
+                       "V. Pecresse" = mean(dataset_cleaned$total_pecresse),
+                       "M. Le Pen" = mean(dataset_cleaned$total_lepen),
+                       "N. Dupont-Aignan" = mean(dataset_cleaned$total_dupontaignan),
+                       "É. Zemmour" = mean(dataset_cleaned$total_zemmour))
+#Tri des candidats par moyenne de voies.
+sorted_avg_votes <- sort(moy_votes_candidat, decreasing = TRUE)
+options(scipen = 999)
+# Création du graphe
+barplot(sorted_avg_votes, 
+        main = "Moyenne de voies par candidat par département",
+        xlab = "Candidats",
+        ylab = "Moyenne de voies par département",
+        col = "skyblue",
+        ylim = c(0, max(sorted_avg_votes) * 1.1),
+        las = 2)
+```
+Nous pouvons également regarder l'étendue des données que nous venons d'obtenir
+```{r}
+etendue = max(moy_votes_candidat) - min(moy_votes_candidat)
+print(max(moy_votes_candidat))
+print(min(moy_votes_candidat))
+print(etendue)
+```
+En moyenne par région, il y a environ 328 345 votants.
+En moyenne par région, il y a 119 852 abstentions.
+En moyenne par région, il y a environ 5080 vote blancs.
+L'étendue des votes entre les candidats est d'environ 89588.45.
