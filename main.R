@@ -40,10 +40,39 @@ dataset_cleaned <- dataset %>%
             total_dupontaignan = sum(VoixDupontAignan),
             pourcentage_dupontaignan = total_dupontaignan / total_votes * 100) 
 
+# Couleur pour les candidats
+total_votes = sum(dataset_cleaned$total_votes)
+candidate_pourcentage <- c("N. Arthaud" = sum(dataset_cleaned$total_arthaud)/total_votes*100,
+                      "P. Poutou" = sum(dataset_cleaned$total_poutou)/total_votes*100,
+                      "F. Roussel" = sum(dataset_cleaned$total_roussel)/total_votes*100,
+                      "J-L. Mélenchon" = sum(dataset_cleaned$total_melenchon)/total_votes*100,
+                      "A. Hidalgo" = sum(dataset_cleaned$total_hidalgo)/total_votes*100,
+                      "Y. Jadot" = sum(dataset_cleaned$total_jadot)/total_votes*100,
+                      "E. Macron" = sum(dataset_cleaned$total_macron)/total_votes*100,
+                      "J. Lassalle" = sum(dataset_cleaned$total_lassalle)/total_votes*100,
+                      "V. Pecresse" = sum(dataset_cleaned$total_pecresse)/total_votes*100,
+                      "M. Le Pen" = sum(dataset_cleaned$total_lepen)/total_votes*100,
+                      "N. Dupont-Aignan" = sum(dataset_cleaned$total_dupontaignan)/total_votes*100,
+                      "É. Zemmour" = sum(dataset_cleaned$total_zemmour)/total_votes*100)
+
+#pourcentage
+candidate_pourcentage_total <- c("N. Arthaud" = , 
+                                  "P. Poutou" = "red3",
+                                  "F. Roussel" = "red2",
+                                  "J-L. Mélenchon" = "tomato2",
+                                  "A. Hidalgo" = "salmon2",
+                                  "Y. Jadot" = "springgreen4",
+                                  "E. Macron" = "goldenrod1", 
+                                  "J. Lassalle" = "lightblue",
+                                  "V. Pecresse" = "royalblue1",
+                                  "M. Le Pen" = "blue2",
+                                  "N. Dupont-Aignan" = "blue3",
+                                  "É. Zemmour" = "navyblue")
+
+
 #Moyenne des données
 moy_votes = mean(dataset_cleaned$total_votes)
 moy_abs = mean(dataset_cleaned$total_abs)
-moy_blanc = mean(dataset_cleaned$total_blancs)
 moy_votes_candidat <- c("N. Arthaud" = mean(dataset_cleaned$total_arthaud), 
                        "P. Poutou" = mean(dataset_cleaned$total_poutou),
                        "F. Roussel" = mean(dataset_cleaned$total_roussel),
@@ -57,17 +86,21 @@ moy_votes_candidat <- c("N. Arthaud" = mean(dataset_cleaned$total_arthaud),
                        "N. Dupont-Aignan" = mean(dataset_cleaned$total_dupontaignan),
                        "É. Zemmour" = mean(dataset_cleaned$total_zemmour))
 
-print(moy_votes_candidat)
+moy_votes_candidat_filtre = sort(moy_votes_candidat)
 
 etendue = max(moy_votes_candidat) - min(moy_votes_candidat)
-print(max(moy_votes_candidat))
-print(min(moy_votes_candidat))
-print(etendue)
 
-#en moyenne par region on a eu environs 328 345 votants
-#en moyenne par region on a eu 119 852 d'abstinence
-#en moyenne par region on a eu environs 5080 vote blanc
-#l'etendue des votes entre les candidat est d'environs 89588.45
+# Données
+noms_candidats <- names(moy_votes_candidat_filtre)
+moyennes_votes <- unname(moy_votes_candidat_filtre)
+
+
+# Création du diagramme circulaire
+pie(moyennes_votes, labels = "", main = "Répartition des votes par candidat", col = candidate_colors[noms_candidats])
+
+# Ajout d'une légende à côté du diagramme circulaire
+legend("right", legend = noms_candidats, fill = candidate_colors[noms_candidats], title = "Candidats", cex = 0.7)
+
 
 # Changement de noms de départements
 names(dataset_cleaned)[1] <- "region"
@@ -143,19 +176,6 @@ result_map <- result_map %>%
     TRUE ~ NA_character_
   ))
 
-# Couleur pour les candidats
-candidate_colors <- c("N. Arthaud" = "red4", 
-                      "P. Poutou" = "red3",
-                      "F. Roussel" = "red2",
-                      "J-L. Mélenchon" = "tomato2",
-                      "A. Hidalgo" = "salmon2",
-                      "Y. Jadot" = "springgreen4",
-                      "E. Macron" = "goldenrod1", 
-                      "J. Lassalle" = "lightblue",
-                      "V. Pecresse" = "royalblue1",
-                      "M. Le Pen" = "blue2",
-                      "N. Dupont-Aignan" = "blue3",
-                      "É. Zemmour" = "navyblue")
 
 # Apparence de la carte
 map_theme <- theme(title=element_text(),
