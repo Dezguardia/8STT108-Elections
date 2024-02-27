@@ -22,15 +22,17 @@ library(readxl)
 library(dplyr)
 
 ```
+
+La base de donnée est importée par la commande suivante.
+```{r}
+# Récupération des résultats
+dataset <- read_xlsx("dataset_elections.xlsx")
+```
 ## II. Analyse des votes par candidat
 
 Ensuite, nous devons effectuer un nettoyage des données. En effet, toutes les informations ne sont pas utiles pour la visualisation, et nous souhaitons les mettre sous une forme plus simple à analyser.
 Ici, pour une visualisation sous forme de carte, nous regroupons les résultats par département.
 ```{r}
-
-# Récupération des résultats
-dataset <- read_xlsx("dataset_elections.xlsx")
-
 # Nettoyage des données et aggrégation des résultats
 dataset_cleaned <- dataset %>%
   group_by(`Libellé du département`) %>%
@@ -66,7 +68,7 @@ dataset_cleaned <- dataset %>%
 ```
 
 Nous pouvons désormais observer la moyenne de votes par département pour chaque candidat.
-```{r}
+```{r moyenne, fig.align='center'}
 #Moyenne de vote de chaque candidat par département
 moy_votes = mean(dataset_cleaned$total_votes)
 moy_abs = mean(dataset_cleaned$total_abs)
@@ -95,14 +97,145 @@ barplot(sorted_avg_votes,
         ylim = c(0, max(sorted_avg_votes) * 1.1),
         las = 2)
 ```
-Nous pouvons également regarder l'étendue des données que nous venons d'obtenir
+
+
+
+
+
+Nous pouvons également regarder l'étendue des données que nous venons d'obtenir.
+
 ```{r}
 etendue = max(moy_votes_candidat) - min(moy_votes_candidat)
 print(max(moy_votes_candidat))
 print(min(moy_votes_candidat))
 print(etendue)
 ```
-En moyenne par région, il y a environ 328 345 votants.
-En moyenne par région, il y a 119 852 abstentions.
-En moyenne par région, il y a environ 5080 vote blancs.
+En moyenne par région, il y a environ 328 345 votants, 119 852 abstentions et 5080 vote blancs.
 L'étendue des votes entre les candidats est d'environ 89588.45.
+
+## III. Cartographie des résultats
+
+Tout d'abord, nous allons nous intéresser principalement à la France métropolitaine. 
+Pour ce faire, il suffit de filtrer les départements.
+```{r}
+# Changement de noms de départements
+names(dataset_cleaned)[1] <- "region"
+dataset_cleaned$region <- stri_trans_general(dataset_cleaned$region, "Latin-ASCII") %>%
+  str_replace_all("Cote-d'Or", "Cote-Dor") %>%
+  str_replace_all("Cotes-d'Armor", "Cotes-Darmor") %>%
+  str_replace_all("Corse-du-Sud", "Corse du Sud") %>%
+  str_replace_all("Val-d'Oise", "Val-Doise") %>%
+  str_replace_all("Corse-du-Sud", "Corse du Sud")
+
+# Récupération de la carte de France
+map <- map_data("france")
+
+# Filtrage des départements pour ne garder que la France métropolitaine
+dataset_cleaned_filtered <- dataset_cleaned %>%
+  filter(region %in% map$region)
+
+# Fusion avec les données de la carte
+result_map <- left_join(x = map[,-6], y = dataset_cleaned_filtered)
+```
+
+Ensuite, il faut trouver le candidat arrivé en tête dans chaque département
+
+```{r}
+# On cherche ici le candidat en tête dans chaque département
+result_map <- result_map %>%
+  rowwise() %>%
+  mutate(candidat_gagnant = case_when(
+    total_arthaud == max(total_arthaud, total_roussel, total_macron, 
+                         total_lassalle, total_lepen, total_zemmour, 
+                         total_melenchon, total_hidalgo, total_jadot, 
+                         total_pecresse, total_poutou, total_dupontaignan) ~ "N. Arthaud",
+    total_roussel == max(total_arthaud, total_roussel, total_macron, 
+                         total_lassalle, total_lepen, total_zemmour, 
+                         total_melenchon, total_hidalgo, total_jadot, 
+                         total_pecresse, total_poutou, total_dupontaignan) ~ "F. Roussel",
+    total_macron == max(total_arthaud, total_roussel, total_macron, 
+                        total_lassalle, total_lepen, total_zemmour, 
+                        total_melenchon, total_hidalgo, total_jadot, 
+                        total_pecresse, total_poutou, total_dupontaignan) ~ "E. Macron",
+    total_lassalle == max(total_arthaud, total_roussel, total_macron, 
+                          total_lassalle, total_lepen, total_zemmour, 
+                          total_melenchon, total_hidalgo, total_jadot, 
+                          total_pecresse, total_poutou, total_dupontaignan) ~ "J. Lassalle",
+    total_lepen == max(total_arthaud, total_roussel, total_macron, 
+                       total_lassalle, total_lepen, total_zemmour, 
+                       total_melenchon, total_hidalgo, total_jadot, 
+                       total_pecresse, total_poutou, total_dupontaignan) ~ "M. Le Pen",
+    total_zemmour == max(total_arthaud, total_roussel, total_macron, 
+                         total_lassalle, total_lepen, total_zemmour, 
+                         total_melenchon, total_hidalgo, total_jadot, 
+                         total_pecresse, total_poutou, total_dupontaignan) ~ "É. Zemmour",
+    total_melenchon == max(total_arthaud, total_roussel, total_macron, 
+                           total_lassalle, total_lepen, total_zemmour, 
+                           total_melenchon, total_hidalgo, total_jadot, 
+                           total_pecresse, total_poutou, total_dupontaignan) ~ "J-L. Mélenchon",
+    total_hidalgo == max(total_arthaud, total_roussel, total_macron, 
+                         total_lassalle, total_lepen, total_zemmour, 
+                         total_melenchon, total_hidalgo, total_jadot, 
+                         total_pecresse, total_poutou, total_dupontaignan) ~ "A. Hidalgo",
+    total_jadot == max(total_arthaud, total_roussel, total_macron, 
+                       total_lassalle, total_lepen, total_zemmour, 
+                       total_melenchon, total_hidalgo, total_jadot, 
+                       total_pecresse, total_poutou, total_dupontaignan) ~ "Y. Jadot",
+    total_pecresse == max(total_arthaud, total_roussel, total_macron, 
+                          total_lassalle, total_lepen, total_zemmour, 
+                          total_melenchon, total_hidalgo, total_jadot, 
+                          total_pecresse, total_poutou, total_dupontaignan) ~ "V. Pécresse",
+    total_poutou == max(total_arthaud, total_roussel, total_macron, 
+                        total_lassalle, total_lepen, total_zemmour, 
+                        total_melenchon, total_hidalgo, total_jadot, 
+                        total_pecresse, total_poutou, total_dupontaignan) ~ "P. Poutou",
+    total_dupontaignan == max(total_arthaud, total_roussel, total_macron, 
+                              total_lassalle, total_lepen, total_zemmour, 
+                              total_melenchon, total_hidalgo, total_jadot, 
+                              total_pecresse, total_poutou, total_dupontaignan) ~ "N. Dupont-Aignan",
+    TRUE ~ NA_character_
+  ))
+```
+
+Nous pouvons désormais générer la carte.
+D'abord, nous assignons une couleur à chaque candidat.
+Ensuite, nous créons le thème de la carte qui sera générée à l'aide de ggplot.
+```{r carte, fig.align='center'}
+# Couleur pour les candidats
+candidate_colors <- c("N. Arthaud" = "red4", 
+                      "P. Poutou" = "red3",
+                      "F. Roussel" = "red2",
+                      "J-L. Mélenchon" = "tomato2",
+                      "A. Hidalgo" = "salmon2",
+                      "Y. Jadot" = "springgreen4",
+                      "E. Macron" = "goldenrod1", 
+                      "J. Lassalle" = "lightblue",
+                      "V. Pecresse" = "royalblue1",
+                      "M. Le Pen" = "blue2",
+                      "N. Dupont-Aignan" = "blue3",
+                      "É. Zemmour" = "navyblue")
+
+# Apparence de la carte
+map_theme <- theme(title = element_text(margin = margin(b = 20, r = 25)), # Ajustement des marges intérieures du titre
+                   plot.title = element_text(margin = margin(b = 20, t = 20)), # Ajustement des marges intérieures du titre principal
+                   plot.subtitle = element_text(margin = margin(b = 20)), # Ajustement des marges intérieures du sous-titre
+                   axis.text.x=element_blank(),
+                   axis.text.y=element_blank(),
+                   axis.ticks=element_blank(),
+                   axis.title.x=element_blank(),
+                   axis.title.y=element_blank(),
+                   panel.grid.major= element_blank(), 
+                   panel.background= element_blank()) 
+
+# Création de la carte
+ggplot(result_map, aes(long, lat, group = group, fill = candidat_gagnant)) +
+  geom_polygon() +
+  geom_path(color = "white", size = 0.3) + # On ajoute la frontière entre les départements
+  coord_map() +
+  scale_fill_manual(values = candidate_colors, name = "Candidat arrivé en tête") +
+  labs(x = "", 
+       y = "", 
+       title = "Candidat arrivé en tête par département au premier tour des présidentielles 2022", 
+       subtitle = "Données via data.gouv") +
+  map_theme
+```
