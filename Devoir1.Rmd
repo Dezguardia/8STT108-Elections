@@ -2,7 +2,9 @@
 title: "Devoir Élections"
 author: "Gabriel Houdry--Bohême, Adem Bensalem, Milan Soragna, Hector Ménétrier, Serigne
   Massamba Guèye"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -98,7 +100,60 @@ barplot(sorted_avg_votes,
         las = 2)
 ```
 
+On peut également représenter les pourcentages d'obtention de vote des candidats grâce à un diagramme circulaire.
 
+```{r}
+# Couleur pour les candidats
+candidate_colors <- c("N. Arthaud" = "red4", 
+                      "P. Poutou" = "red3",
+                      "F. Roussel" = "red2",
+                      "J-L. Mélenchon" = "tomato2",
+                      "A. Hidalgo" = "salmon2",
+                      "Y. Jadot" = "springgreen4",
+                      "E. Macron" = "goldenrod1", 
+                      "J. Lassalle" = "lightblue",
+                      "V. Pecresse" = "royalblue1",
+                      "M. Le Pen" = "blue2",
+                      "N. Dupont-Aignan" = "blue3",
+                      "É. Zemmour" = "navyblue")
+
+#pourcentage
+total_votes = sum(dataset_cleaned$total_votes)
+candidate_pourcentage <- c("N. Arthaud" = sum(dataset_cleaned$total_arthaud)/total_votes*100,
+                           "P. Poutou" = sum(dataset_cleaned$total_poutou)/total_votes*100,
+                           "F. Roussel" = sum(dataset_cleaned$total_roussel)/total_votes*100,
+                           "J-L. Mélenchon" = sum(dataset_cleaned$total_melenchon)/total_votes*100,
+                           "A. Hidalgo" = sum(dataset_cleaned$total_hidalgo)/total_votes*100,
+                           "Y. Jadot" = sum(dataset_cleaned$total_jadot)/total_votes*100,
+                           "E. Macron" = sum(dataset_cleaned$total_macron)/total_votes*100,
+                           "J. Lassalle" = sum(dataset_cleaned$total_lassalle)/total_votes*100,
+                           "V. Pecresse" = sum(dataset_cleaned$total_pecresse)/total_votes*100,
+                           "M. Le Pen" = sum(dataset_cleaned$total_lepen)/total_votes*100,
+                           "N. Dupont-Aignan" = sum(dataset_cleaned$total_dupontaignan)/total_votes*100,
+                           "É. Zemmour" = sum(dataset_cleaned$total_zemmour)/total_votes*100)
+
+# Données
+noms_candidats <- names(sorted_avg_votes)
+moyennes_votes <- unname(sorted_avg_votes)
+
+
+# Création du diagramme circulaire
+par(pty = "m", mfrow = c(1, 1), mar = c(2, 2, 2, 2))
+
+plot.new()
+
+pie(moyennes_votes, 
+    labels = paste(round(candidate_pourcentage[noms_candidats]),"%"),
+    main = "Pourcentage des votes par candidat", 
+    col = candidate_colors[noms_candidats],
+    cex = 0.6)
+
+legend("right", 
+       legend = noms_candidats, 
+       fill = candidate_colors[noms_candidats], 
+       title = "Candidats", 
+       cex = 0.6)
+```
 
 
 
@@ -106,12 +161,10 @@ Nous pouvons également regarder l'étendue des données que nous venons d'obten
 
 ```{r}
 etendue = max(moy_votes_candidat) - min(moy_votes_candidat)
-print(max(moy_votes_candidat))
-print(min(moy_votes_candidat))
 print(etendue)
 ```
 En moyenne par région, il y a environ 328 345 votants, 119 852 abstentions et 5080 vote blancs.
-L'étendue des votes entre les candidats est d'environ 89588.45.
+L'étendue des votes entre les candidats est d'environ 89 588 votes.
 
 ## III. Cartographie des résultats
 
@@ -239,3 +292,36 @@ ggplot(result_map, aes(long, lat, group = group, fill = candidat_gagnant)) +
        subtitle = "Données via data.gouv") +
   map_theme
 ```
+
+## IV. Régression linéaire
+
+```{r}
+graph_reg_lin <- function(x, y , x_lab, y_lab,main_lab) {
+  modele_regression <- lm(y ~ x)
+  
+  plot(x, y, 
+       xlab = x_lab, 
+       ylab = y_lab, 
+       main = main_lab,
+       pch = 19, col = "blue")
+  
+  abline(modele_regression, col = "red")
+  
+  legend("topleft", legend = c("Données", "Ligne de régression"),
+         col = c("blue", "red"), pch = c(19, NA), lty = c(NA, 1),
+         title = "Légende", cex = 0.3)
+}
+```
+
+Macron
+```{r}
+graph_reg_lin(dataset_cleaned$total_votes, dataset_cleaned$total_macron, "Total des votes par département","Total des votes pour Macron par département","Relation entre les votes pour Macron et le total des votes")
+```
+
+Arthaud
+
+```{r}
+graph_reg_lin(dataset_cleaned$total_votes, dataset_cleaned$total_arthaud, "Total des votes par département","Total des votes pour Arthaud par département","Relation entre les votes pour Arthaud et le total des votes")
+```
+
+Si on compare ces deux graphiques de régression linéaire, on peut en conclure qu'aux plus il y aura de votes au plus les votes des candidats augmenteront mais on peut constater que l'évolution des votes sera plus au moins rapide selon les candidats (ici les votes d'E. Macron augmenteront beaucoup plus rapidements que ceux de N. Arthaud).
