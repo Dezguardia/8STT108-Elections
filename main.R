@@ -4,6 +4,10 @@ library(stringi)
 library(readxl)
 library(dplyr)
 
+# Ce fichier n'est plus utilisé, nous avons fait tout le code fonctionnel dans le Devoir1.Rmd
+
+
+
 # Récupération des résultats
 dataset <- read_xlsx("dataset_elections.xlsx")
 
@@ -43,48 +47,48 @@ dataset_cleaned <- dataset %>%
 # Couleur pour les candidats
 total_votes = sum(dataset_cleaned$total_votes)
 candidate_pourcentage <- c("N. Arthaud" = sum(dataset_cleaned$total_arthaud)/total_votes*100,
-                      "P. Poutou" = sum(dataset_cleaned$total_poutou)/total_votes*100,
-                      "F. Roussel" = sum(dataset_cleaned$total_roussel)/total_votes*100,
-                      "J-L. Mélenchon" = sum(dataset_cleaned$total_melenchon)/total_votes*100,
-                      "A. Hidalgo" = sum(dataset_cleaned$total_hidalgo)/total_votes*100,
-                      "Y. Jadot" = sum(dataset_cleaned$total_jadot)/total_votes*100,
-                      "E. Macron" = sum(dataset_cleaned$total_macron)/total_votes*100,
-                      "J. Lassalle" = sum(dataset_cleaned$total_lassalle)/total_votes*100,
-                      "V. Pecresse" = sum(dataset_cleaned$total_pecresse)/total_votes*100,
-                      "M. Le Pen" = sum(dataset_cleaned$total_lepen)/total_votes*100,
-                      "N. Dupont-Aignan" = sum(dataset_cleaned$total_dupontaignan)/total_votes*100,
-                      "É. Zemmour" = sum(dataset_cleaned$total_zemmour)/total_votes*100)
+                           "P. Poutou" = sum(dataset_cleaned$total_poutou)/total_votes*100,
+                           "F. Roussel" = sum(dataset_cleaned$total_roussel)/total_votes*100,
+                           "J-L. Mélenchon" = sum(dataset_cleaned$total_melenchon)/total_votes*100,
+                           "A. Hidalgo" = sum(dataset_cleaned$total_hidalgo)/total_votes*100,
+                           "Y. Jadot" = sum(dataset_cleaned$total_jadot)/total_votes*100,
+                           "E. Macron" = sum(dataset_cleaned$total_macron)/total_votes*100,
+                           "J. Lassalle" = sum(dataset_cleaned$total_lassalle)/total_votes*100,
+                           "V. Pecresse" = sum(dataset_cleaned$total_pecresse)/total_votes*100,
+                           "M. Le Pen" = sum(dataset_cleaned$total_lepen)/total_votes*100,
+                           "N. Dupont-Aignan" = sum(dataset_cleaned$total_dupontaignan)/total_votes*100,
+                           "É. Zemmour" = sum(dataset_cleaned$total_zemmour)/total_votes*100)
 
 #pourcentage
 candidate_pourcentage_total <- c("N. Arthaud" = , 
-                                  "P. Poutou" = "red3",
-                                  "F. Roussel" = "red2",
-                                  "J-L. Mélenchon" = "tomato2",
-                                  "A. Hidalgo" = "salmon2",
-                                  "Y. Jadot" = "springgreen4",
-                                  "E. Macron" = "goldenrod1", 
-                                  "J. Lassalle" = "lightblue",
-                                  "V. Pecresse" = "royalblue1",
-                                  "M. Le Pen" = "blue2",
-                                  "N. Dupont-Aignan" = "blue3",
-                                  "É. Zemmour" = "navyblue")
+                                 "P. Poutou" = "red3",
+                                 "F. Roussel" = "red2",
+                                 "J-L. Mélenchon" = "tomato2",
+                                 "A. Hidalgo" = "salmon2",
+                                 "Y. Jadot" = "springgreen4",
+                                 "E. Macron" = "goldenrod1", 
+                                 "J. Lassalle" = "lightblue",
+                                 "V. Pecresse" = "royalblue1",
+                                 "M. Le Pen" = "blue2",
+                                 "N. Dupont-Aignan" = "blue3",
+                                 "É. Zemmour" = "navyblue")
 
 
 #Moyenne des données
 moy_votes = mean(dataset_cleaned$total_votes)
 moy_abs = mean(dataset_cleaned$total_abs)
 moy_votes_candidat <- c("N. Arthaud" = mean(dataset_cleaned$total_arthaud), 
-                       "P. Poutou" = mean(dataset_cleaned$total_poutou),
-                       "F. Roussel" = mean(dataset_cleaned$total_roussel),
-                       "J-L. Mélenchon" = mean(dataset_cleaned$total_melenchon),
-                       "A. Hidalgo" = mean(dataset_cleaned$total_hidalgo),
-                       "Y. Jadot" = mean(dataset_cleaned$total_jadot),
-                       "E. Macron" = mean(dataset_cleaned$total_macron), 
-                       "J. Lassalle" = mean(dataset_cleaned$total_lassalle),
-                       "V. Pecresse" = mean(dataset_cleaned$total_pecresse),
-                       "M. Le Pen" = mean(dataset_cleaned$total_lepen),
-                       "N. Dupont-Aignan" = mean(dataset_cleaned$total_dupontaignan),
-                       "É. Zemmour" = mean(dataset_cleaned$total_zemmour))
+                        "P. Poutou" = mean(dataset_cleaned$total_poutou),
+                        "F. Roussel" = mean(dataset_cleaned$total_roussel),
+                        "J-L. Mélenchon" = mean(dataset_cleaned$total_melenchon),
+                        "A. Hidalgo" = mean(dataset_cleaned$total_hidalgo),
+                        "Y. Jadot" = mean(dataset_cleaned$total_jadot),
+                        "E. Macron" = mean(dataset_cleaned$total_macron), 
+                        "J. Lassalle" = mean(dataset_cleaned$total_lassalle),
+                        "V. Pecresse" = mean(dataset_cleaned$total_pecresse),
+                        "M. Le Pen" = mean(dataset_cleaned$total_lepen),
+                        "N. Dupont-Aignan" = mean(dataset_cleaned$total_dupontaignan),
+                        "É. Zemmour" = mean(dataset_cleaned$total_zemmour))
 
 moy_votes_candidat_filtre = sort(moy_votes_candidat)
 
@@ -200,3 +204,27 @@ ggplot(result_map, aes(long, lat, group = group, fill = candidat_gagnant)) +
        subtitle = "Données via data.gouv") +
   map_theme
 
+library(class)
+
+# Sélection des variables pour la prédiction
+features <- c("total_votes", "total_blancs", "pourcentage_blanc", "total_abs", "pourcentage_abs", "total_arthaud", "pourcentage_arthaud", "total_roussel", "pourcentage_roussel", "total_macron", "pourcentage_macron", "total_lassalle", "pourcentage_lassalle", "total_lepen", "pourcentage_lepen", "total_zemmour", "pourcentage_zemmour", "total_melenchon", "pourcentage_melenchon", "total_hidalgo", "pourcentage_hidalgo", "total_jadot", "pourcentage_jadot", "total_pecresse", "pourcentage_pecresse", "total_poutou", "pourcentage_poutou", "total_dupontaignan", "pourcentage_dupontaignan")
+
+# Créez une nouvelle colonne 'candidat_gagnant' basée sur le pourcentage le plus élevé
+dataset_cleaned$candidat_gagnant <- apply(dataset_cleaned[, grep("pourcentage_", names(dataset_cleaned))], 1, function(x) names(x)[which.max(x)])
+
+# Séparation des données en ensembles d'entraînement et de test
+set.seed(123)  # pour reproduire les résultats
+train_indices <- sample(nrow(dataset_cleaned), nrow(dataset_cleaned) * 0.7)
+train_data <- dataset_cleaned[train_indices, ]
+test_data <- dataset_cleaned[-train_indices, ]
+
+# Entraînement du modèle KNN
+k <- 3  # ajustez la valeur de k selon votre choix
+knn_model <- knn(train = train_data[, features], 
+                 test = test_data[, features], 
+                 cl = train_data$candidat_gagnant, 
+                 k = k)
+
+# Évaluation des performances
+accuracy <- sum(knn_model == test_data$candidat_gagnant) / length(test_data$candidat_gagnant)
+cat("Précision du modèle KNN :", round(accuracy * 100, 2), "%\n")

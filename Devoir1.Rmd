@@ -3,7 +3,6 @@ title: "Devoir Élections"
 author: "Gabriel Houdry--Bohême, Adem Bensalem, Milan Soragna, Hector Ménétrier, Serigne
   Massamba Guèye"
 output:
-  pdf_document: default
   html_document: default
 ---
 
@@ -22,6 +21,7 @@ library(stringr)
 library(stringi)
 library(readxl)
 library(dplyr)
+library(MASS)
 
 ```
 
@@ -30,6 +30,8 @@ La base de donnée est importée par la commande suivante.
 # Récupération des résultats
 dataset <- read_xlsx("dataset_elections.xlsx")
 ```
+
+Nous avons initialement fait des tests dans le fichier main.R, avant de déplacer tout le code dans Devoir1.Rmd.
 ## II. Analyse des votes par candidat
 
 Ensuite, nous devons effectuer un nettoyage des données. En effet, toutes les informations ne sont pas utiles pour la visualisation, et nous souhaitons les mettre sous une forme plus simple à analyser.
@@ -87,14 +89,14 @@ moy_votes_candidat <- c("N. Arthaud" = mean(dataset_cleaned$total_arthaud),
                        "M. Le Pen" = mean(dataset_cleaned$total_lepen),
                        "N. Dupont-Aignan" = mean(dataset_cleaned$total_dupontaignan),
                        "É. Zemmour" = mean(dataset_cleaned$total_zemmour))
-#Tri des candidats par moyenne de voies.
+#Tri des candidats par moyenne de votes.
 sorted_avg_votes <- sort(moy_votes_candidat, decreasing = TRUE)
 options(scipen = 999)
 # Création du graphe
 barplot(sorted_avg_votes, 
-        main = "Moyenne de voies par candidat par département",
+        main = "Moyenne de votes par candidat par département",
         xlab = "Candidats",
-        ylab = "Moyenne de voies par département",
+        ylab = "Moyenne de votes par département",
         col = "skyblue",
         ylim = c(0, max(sorted_avg_votes) * 1.1),
         las = 2)
@@ -325,3 +327,37 @@ graph_reg_lin(dataset_cleaned$total_votes, dataset_cleaned$total_arthaud, "Total
 ```
 
 Si on compare ces deux graphiques de régression linéaire, on peut en conclure qu'aux plus il y aura de votes au plus les votes des candidats augmenteront mais on peut constater que l'évolution des votes sera plus au moins rapide selon les candidats (ici les votes d'E. Macron augmenteront beaucoup plus rapidements que ceux de N. Arthaud).
+
+
+# V. Classification avec k-NN
+
+Maintenant, nous allons utiliser l'algorithme k-NN pour classer les données en fonction des votes pour chaque candidat.
+
+```{r}
+library(class)
+
+# Sélection des variables pour la prédiction
+features <- c("total_votes", "total_blancs", "pourcentage_blanc", "total_abs", "pourcentage_abs", "total_arthaud", "pourcentage_arthaud", "total_roussel", "pourcentage_roussel", "total_macron", "pourcentage_macron", "total_lassalle", "pourcentage_lassalle", "total_lepen", "pourcentage_lepen", "total_zemmour", "pourcentage_zemmour", "total_melenchon", "pourcentage_melenchon", "total_hidalgo", "pourcentage_hidalgo", "total_jadot", "pourcentage_jadot", "total_pecresse", "pourcentage_pecresse", "total_poutou", "pourcentage_poutou", "total_dupontaignan", "pourcentage_dupontaignan")
+
+# Création d'une nouvelle colonne 'candidat_gagnant' basée sur le pourcentage le plus élevé
+dataset_cleaned$candidat_gagnant <- apply(dataset_cleaned[, grep("pourcentage_", names(dataset_cleaned))], 1, function(x) names(x)[which.max(x)])
+
+# Séparation des données en ensembles d'entraînement et de test
+set.seed(123)
+train_indices <- sample(nrow(dataset_cleaned), nrow(dataset_cleaned) * 0.7)
+train_data <- dataset_cleaned[train_indices, ]
+test_data <- dataset_cleaned[-train_indices, ]
+
+# Entraînement du modèle KNN
+k <- 3
+knn_model <- knn(train = train_data[, features], 
+                 test = test_data[, features], 
+                 cl = train_data$candidat_gagnant, 
+                 k = k)
+
+# Évaluation des performances
+accuracy <- sum(knn_model == test_data$candidat_gagnant) / length(test_data$candidat_gagnant)
+cat("Précision du modèle KNN :", round(accuracy * 100, 2), "%\n")
+
+```
+Dans cette section, nous avons utilisé l'algorithme k-NN pour classer les données en fonction des votes pour chaque candidat. La précision du modèle k-NN a été évaluée et affichée.
