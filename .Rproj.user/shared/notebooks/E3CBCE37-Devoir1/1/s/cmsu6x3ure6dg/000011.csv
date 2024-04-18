@@ -1,0 +1,6 @@
+"0",""
+"0","pie(moyennes_votes, "
+"0","    labels = paste(round(candidate_pourcentage[noms_candidats]),""%""),"
+"0","    main = ""Pourcentage des votes par candidat"", "
+"0","    col = candidate_colors[noms_candidats],"
+"0","    cex = 0.6)"

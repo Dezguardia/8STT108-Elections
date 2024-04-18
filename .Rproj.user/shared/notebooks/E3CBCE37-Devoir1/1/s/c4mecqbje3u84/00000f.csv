@@ -1,0 +1,3 @@
+"0","# Récupération des résultats"
+"0","dataset <- read_xlsx(""dataset_elections.xlsx"")"
+"2","New names:"
