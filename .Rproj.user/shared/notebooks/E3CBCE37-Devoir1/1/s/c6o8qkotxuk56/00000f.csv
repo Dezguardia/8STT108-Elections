@@ -1,6 +1,6 @@
 "0","# Nettoyage des données et aggrégation des résultats"
 "0","dataset_cleaned <- dataset %>%"
-"0","  group_by(`Libellé du département`) %>%"
+"0","  group_by(`Code du département`, `Libellé du département`) %>%"
 "0","  summarise(total_votes = sum(Exprimés), "
 "0","            total_blancs = sum(Blancs),"
 "0","            pourcentage_blanc = total_blancs / sum(Votants) * 100, "
@@ -30,3 +30,4 @@
 "0","            pourcentage_poutou = total_poutou / total_votes * 100,"
 "0","            total_dupontaignan = sum(VoixDupontAignan),"
 "0","            pourcentage_dupontaignan = total_dupontaignan / total_votes * 100)"
+"2","`summarise()` has grouped output by 'Code du département'. You can override using the `.groups` argument."

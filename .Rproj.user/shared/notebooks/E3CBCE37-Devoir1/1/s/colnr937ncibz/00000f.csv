@@ -24,7 +24,7 @@
 "0","cat(""Précision du modèle KNN :"", round(accuracy * 100, 2), ""%\n"")"
 "1","Précision du modèle KNN :"
 "1"," "
-"1","51.52"
+"1","60.61"
 "1"," "
 "1","%
 "

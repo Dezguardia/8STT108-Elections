@@ -1,5 +1,5 @@
 "0","# Changement de noms de départements"
-"0","names(dataset_cleaned)[1] <- ""region"""
+"0","names(dataset_cleaned)[2] <- ""region"""
 "0","dataset_cleaned$region <- stri_trans_general(dataset_cleaned$region, ""Latin-ASCII"") %>%"
 "0","  str_replace_all(""Cote-d'Or"", ""Cote-Dor"") %>%"
 "0","  str_replace_all(""Cotes-d'Armor"", ""Cotes-Darmor"") %>%"

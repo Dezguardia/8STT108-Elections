@@ -280,3 +280,40 @@ crime_departement_annee <- mutate(crime_departement_annee, taux_crime_par_1000 =
 crime_departement_annee$annee <- as.numeric(paste0("20", crime_departement_annee$annee))
 # Afficher les premières lignes du résultat
 head(crime_departement_annee)
+
+library(readxl)
+
+dataset_chomage <- read_xls("dataset_chomage.xls")
+# Sélection des colonnes se terminant par les années spécifiées
+cols_to_keep <- grep("2016$|2017$|2018$|2019$|2020$|2021$|2022$|2023$", names(dataset_chomage), value = TRUE)
+
+# Sélection des colonnes "Code" et "Libellé" en les ajoutant aux colonnes filtrées
+cols_to_keep <- c("Code", "Libellé", cols_to_keep)
+
+# Création du nouveau dataframe avec les colonnes sélectionnées
+dataset_chomage_filtered <- dataset_chomage[, cols_to_keep]
+
+# Sélection des colonnes se terminant par les années spécifiées
+cols_to_keep <- grep("T[1-4]_201[6-9]|T[1-4]_202[0-3]", names(dataset_chomage), value = TRUE)
+
+# Calcul de la moyenne pour chaque année
+dataset_chomage_filtered$Moyenne_2016 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2016", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2017 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2017", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2018 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2018", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2019 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2019", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2020 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2020", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2021 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2021", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2022 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2022", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2023 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2023", names(dataset_chomage_filtered))])
+
+library(dplyr)
+
+# Sélection des colonnes à conserver (code, libellé et moyennes)
+cols_to_keep <- c("Code", "Libellé", paste0("Moyenne_", 2016:2023))
+
+# Création d'un nouveau dataframe avec les colonnes sélectionnées
+dataset_chomage_filtered <- dataset_chomage_filtered %>%
+  select(cols_to_keep)
+
+# Affichage des premières lignes du résultat
+head(dataset_chomage_filtered)

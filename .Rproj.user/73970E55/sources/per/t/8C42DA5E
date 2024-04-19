@@ -3,7 +3,7 @@
     "path": "C:/Users/lordh/Desktop/UQAC/Hiver/Analyse Statistique des Données de Masse/8STT108_HoudryBoheme_Menetrier_Soragna_MassambaGueye_Bensalem/Devoir1.Rmd",
     "project_path": "Devoir1.Rmd",
     "type": "r_markdown",
-    "hash": "1352590981",
+    "hash": "1743541358",
     "contents": "",
     "dirty": false,
     "created": 1708978825200.0,
@@ -13,16 +13,16 @@
         "tempName": "Untitled1",
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "382,35",
-        "scrollLine": "373",
-        "last_setup_crc32": "ee2f3429bb338d19"
+        "cursorPosition": "470,42",
+        "scrollLine": "468",
+        "last_setup_crc32": ""
     },
     "folds": "",
-    "lastKnownWriteTime": 1713476004,
+    "lastKnownWriteTime": 1713496771,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1713476004998,
+    "last_content_update": 1713496771308,
     "read_only": false,
     "read_only_alternatives": []
 }
