@@ -39,7 +39,7 @@ Ici, pour une visualisation sous forme de carte, nous regroupons les résultats 
 ```{r}
 # Nettoyage des données et aggrégation des résultats
 dataset_cleaned <- dataset %>%
-  group_by(`Libellé du département`) %>%
+  group_by(`Code du département`, `Libellé du département`) %>%
   summarise(total_votes = sum(Exprimés), 
             total_blancs = sum(Blancs),
             pourcentage_blanc = total_blancs / sum(Votants) * 100, 
@@ -174,7 +174,7 @@ Tout d'abord, nous allons nous intéresser principalement à la France métropol
 Pour ce faire, il suffit de filtrer les départements.
 ```{r}
 # Changement de noms de départements
-names(dataset_cleaned)[1] <- "region"
+names(dataset_cleaned)[2] <- "region"
 dataset_cleaned$region <- stri_trans_general(dataset_cleaned$region, "Latin-ASCII") %>%
   str_replace_all("Cote-d'Or", "Cote-Dor") %>%
   str_replace_all("Cotes-d'Armor", "Cotes-Darmor") %>%
@@ -385,43 +385,89 @@ Tout d'abord, nous devons les nettoyer pour pouvoir les utiliser correctement.
 ### a. Dataset sur les crimes
 D'abord, nous ne gardons que les données métropolitaines. Il nous faut ensuite calculer pour chaque département et chaque année, le taux de crime par 1000 habitants. Enfin, pour utiliser les données plus facilement, nous utilisons les données du dataset utilisé pour créer la carte pour récupérer le nom de département, afin d'établir la relation entre les jeux de données
 ```{r}
-# Création d'une colonne contenant les numéros de département en les triant dans l'ordre alphabétique
-dataset_cleaned_filtered$num_dep <- match(dataset_cleaned_filtered$region, unique(dataset_cleaned_filtered$region))
+library(stringr)
 
 # Chargement du jeu de données
 crime_data <- read_xlsx("dataset_crime.xlsx") 
 
-# Exclusion des DOM TOM et Corse
+# Exclusion des DOM TOM
 crime_data_filtre <- crime_data %>%
-  filter(!CodeDépartement %in% c(971, 972, 973, 974, 975, 976, "NA", "2A", "2B"))
+  filter(!CodeDépartement %in% c(971, 972, 973, 974, 975, 976, "NA"))
+
+# Ajout d'un zéro au début des codes de département (Pour avoir les mêmes que dans dataset_cleaned_filtered)
+crime_data_filtre$CodeDépartement <- str_pad(crime_data_filtre$CodeDépartement, width = 2, side = "left", pad = "0")
 
 # Récupération des crimes par département par année
 crime_departement_annee <- crime_data_filtre %>%
   group_by(CodeDépartement, annee) %>%
   summarise(total_crimes = sum(faits))
-# On ajoute la population par département par année
+
+# Ajout de la population par département par année
 crime_departement_annee <- left_join(crime_departement_annee, 
                                      crime_data_filtre %>% 
                                        group_by(CodeDépartement, annee) %>% 
                                        summarise(Population = max(POP)),
                                      by = c("CodeDépartement", "annee"))
 
-# Calcul du taux de criminalité par 1000 habitants pour chaque département
+# Calcul du taux de criminalité par 1000 habitants pour chaque département chaque année
 crime_departement_annee <- mutate(crime_departement_annee, taux_crime_par_1000 = round((total_crimes / as.numeric(Population)) * 1000, 2))
 
 # Amélioration de l'affichage de l'année en ajoutant le préfixe 20 pour obtenir par exemple 2016
 crime_departement_annee$annee <- as.numeric(paste0("20", crime_departement_annee$annee))
-crime_departement_annee$CodeDépartement = as.integer(crime_departement_annee$CodeDépartement)
-# Merge to keep only the region column from dataset_cleaned_filtered in crime_departement_annee
-crime_departement_annee <- merge(x = crime_departement_annee, 
-                                 y = dataset_cleaned_filtered[, c("num_dep", "region")], 
-                                 by.x = "CodeDépartement", 
-                                 by.y = "num_dep", 
-                                 all.x = TRUE)
 
-# Rename the region column to match the column name in crime_departement_annee
-names(crime_departement_annee)[names(crime_departement_annee) == "Département"] <- "region"
+names(dataset_cleaned_filtered)[names(dataset_cleaned_filtered) == "Code du département"] <- "CodeDépartement"
 
-# Display the first few rows of the result
+# Correction des codes "2A" et "2B" dans dataset_cleaned_filtered
+dataset_cleaned_filtered$CodeDépartement <- ifelse(dataset_cleaned_filtered$CodeDépartement %in% c("2A", "2B"), 
+                                                   dataset_cleaned_filtered$CodeDépartement, 
+                                                   str_pad(dataset_cleaned_filtered$CodeDépartement, width = 2, side = "left", pad = "0"))
+
+# Jointure sur le code du département avec le dataset principal
+crime_departement_annee <- left_join(crime_departement_annee, 
+                                     dataset_cleaned_filtered %>% 
+                                       dplyr::select(CodeDépartement, region), 
+                                     by = "CodeDépartement")
+crime_departement_annee <- crime_departement_annee %>%
+  rename(Département = region)
+
 head(crime_departement_annee)
+
+```
+
+### b. Dataset sur le chômage
+Même chose ici. Nous ne gardons que les années de 2016 à 2023, années présentes sur le jeu de données précédent portant sur la criminalité.
+Nous réalisons également une moyenne par année, n'ayant pas besoin de l'évolution du taux de criminalité par semestre.
+```{r}
+dataset_chomage <- read_xls("dataset_chomage.xls")
+
+# Sélection des colonnes de 2016 à 2023
+cols_to_keep <- grep("2016$|2017$|2018$|2019$|2020$|2021$|2022$|2023$", names(dataset_chomage), value = TRUE)
+cols_to_keep <- c("Code", "Libellé", cols_to_keep)
+
+# Création du nouveau dataframe avec les années dont on a besoin
+dataset_chomage_filtered <- dataset_chomage[, cols_to_keep]
+cols_to_keep <- grep("T[1-4]_201[6-9]|T[1-4]_202[0-3]", names(dataset_chomage), value = TRUE)
+
+# Calcul de la moyenne du taux de chômage pour chaque année pour chaque département
+dataset_chomage_filtered$Moyenne_2016 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2016", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2017 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2017", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2018 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2018", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2019 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2019", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2020 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2020", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2021 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2021", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2022 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2022", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2023 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2023", names(dataset_chomage_filtered))])
+
+library(dplyr)
+
+# Sélection des colonnes à conserver (code, libellé et moyennes)
+cols_to_keep <- c("Code", "Libellé", paste0("Moyenne_", 2016:2023))
+
+# Création d'un nouveau dataframe avec les colonnes sélectionnées
+dataset_chomage_filtered <- dataset_chomage_filtered %>%
+  dplyr::select(cols_to_keep)
+# Suppression des DOM TOM
+dataset_chomage_filtered <- dataset_chomage_filtered %>%
+  filter(!Code %in% c(971, 972, 973, 974))
+head(dataset_chomage_filtered)
 ```

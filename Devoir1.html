@@ -809,7 +809,10 @@ correctement.</p>
 <h3>a. Dataset sur les crimes</h3>
 <p>D’abord, nous ne gardons que les données métropolitaines. Il nous
 faut ensuite calculer pour chaque département et chaque année, le taux
-de crime par 1000 habitants.</p>
+de crime par 1000 habitants. Enfin, pour utiliser les données plus
+facilement, nous utilisons les données du dataset utilisé pour créer la
+carte pour récupérer le nom de département, afin d’établir la relation
+entre les jeux de données</p>
 <pre class="r"><code># Création d&#39;une colonne contenant les numéros de département en les triant dans l&#39;ordre alphabétique
 dataset_cleaned_filtered$num_dep &lt;- match(dataset_cleaned_filtered$region, unique(dataset_cleaned_filtered$region))
 

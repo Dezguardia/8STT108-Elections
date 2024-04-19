@@ -6,6 +6,8 @@ library(dplyr)
 library(tidyr)
 library(MASS)
 
+
+
 # Récupération des résultats
 dataset <- read_xlsx("dataset_elections.xlsx")
 
@@ -280,6 +282,42 @@ crime_departement_annee$annee <- as.numeric(paste0("20", crime_departement_annee
 # Afficher les premières lignes du résultat
 head(crime_departement_annee)
 
+library(readxl)
+
+dataset_chomage <- read_xls("dataset_chomage.xls")
+# Sélection des colonnes se terminant par les années spécifiées
+cols_to_keep <- grep("2016$|2017$|2018$|2019$|2020$|2021$|2022$|2023$", names(dataset_chomage), value = TRUE)
+
+# Sélection des colonnes "Code" et "Libellé" en les ajoutant aux colonnes filtrées
+cols_to_keep <- c("Code", "Libellé", cols_to_keep)
+
+# Création du nouveau dataframe avec les colonnes sélectionnées
+dataset_chomage_filtered <- dataset_chomage[, cols_to_keep]
+
+# Sélection des colonnes se terminant par les années spécifiées
+cols_to_keep <- grep("T[1-4]_201[6-9]|T[1-4]_202[0-3]", names(dataset_chomage), value = TRUE)
+
+# Calcul de la moyenne pour chaque année
+dataset_chomage_filtered$Moyenne_2016 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2016", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2017 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2017", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2018 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2018", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2019 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2019", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2020 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2020", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2021 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2021", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2022 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2022", names(dataset_chomage_filtered))])
+dataset_chomage_filtered$Moyenne_2023 <- rowMeans(dataset_chomage_filtered[, grepl("T[1-4]_2023", names(dataset_chomage_filtered))])
+
+library(dplyr)
+
+# Sélection des colonnes à conserver (code, libellé et moyennes)
+cols_to_keep <- c("Code", "Libellé", paste0("Moyenne_", 2016:2023))
+
+# Création d'un nouveau dataframe avec les colonnes sélectionnées
+dataset_chomage_filtered <- dataset_chomage_filtered %>%
+  select(cols_to_keep)
+
+# Affichage des premières lignes du résultat
+head(dataset_chomage_filtered)
 
 data_merged <- merge(crime_departement_annee, dataset_cleaned_filtered, by.x = "CodeDépartement", by.y = "Code du département")
 ggplot(data_merged, aes(x = taux_crime_par_1000, y = pourcentage_macron)) +
@@ -291,7 +329,7 @@ ggplot(data_merged, aes(x = taux_crime_par_1000, y = pourcentage_macron)) +
   theme_minimal()
 
 ggplot(data_merged, aes(x = taux_crime_par_1000, y = pourcentage_lepen)) +
-  geom_point(alpha = 0.5) + 
+  geom_point(alpha = 0.5) +
   geom_smooth(method = "lm", se = TRUE, color = "blue") + # Régression linéaire avec erreur standard
   labs(title = "Régression linéaire entre taux de crime et votes pour Lepen",
        x = "Taux de crime par 1000 personnes",
@@ -306,23 +344,22 @@ valeurs_pch <- setNames(c(0, 1, 2, 3, 4, 5, 6, 7), levels(data_merged$annee)) # 
 ggplot(data_merged, aes(x = taux_crime_par_1000)) + # Valeur commune sur x, le taux de crime
   geom_point(aes(y = pourcentage_macron, color = "Macron", shape = annee), alpha = 0.5) +  # Pourcentages Macron
   geom_smooth(aes(y = pourcentage_macron, color = "Macron"), method = "lm", se = TRUE) +  # Regression linéaire pour Macron
-  
+
   geom_point(aes(y = pourcentage_lepen, color = "Le Pen", shape = annee), alpha = 0.5) +  # Pourcentages Le Pen
   geom_smooth(aes(y = pourcentage_lepen, color = "Le Pen"), method = "lm", se = TRUE) +  # Regression linéaire pour LePen
-  
+
   geom_point(aes(y = pourcentage_zemmour, color ="Zemmour", shape = annee) , alpha = 0.5) +  # Pourcentages Zemmour
   geom_smooth(aes(y = pourcentage_zemmour, color ="Zemmour"), method = "lm", se = TRUE) +  # Regression linéaire pour Zemmour
-  
+
   geom_point(aes(y = pourcentage_melenchon, color ="Mélenchon", shape = annee) , alpha = 0.5) +  # Pourcentages Zemmour
   geom_smooth(aes(y = pourcentage_melenchon, color ="Mélenchon"), method = "lm", se = TRUE) +  # Regression linéaire pour Zemmour
-  
-  
+
+
   labs(title = "Régression comparative entre le taux de crime et les votes sur les candidats",
        x = "Taux de crime par 1000 personnes",
        y = "Pourcentage des votes",
-       color = "Candidat", 
+       color = "Candidat",
        shape = "Année") +
   theme_minimal() +
   scale_color_manual(values = c("Macron" = "blue", "Le Pen" = "red", "Zemmour" = "green", "Mélenchon" = "purple")) +
   scale_shape_manual(values = valeurs_pch)
-
