@@ -1,6 +1,0 @@
-"0",""
-"0","legend(""right"", "
-"0","       legend = noms_candidats, "
-"0","       fill = candidate_colors[noms_candidats], "
-"0","       title = ""Candidats"", "
-"0","       cex = 0.6)"

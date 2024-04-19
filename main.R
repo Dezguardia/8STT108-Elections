@@ -3,16 +3,15 @@ library(stringr)
 library(stringi)
 library(readxl)
 library(dplyr)
+library(tidyr)
 library(MASS)
-
-
 
 # Récupération des résultats
 dataset <- read_xlsx("dataset_elections.xlsx")
 
 # Nettoyage des données et aggrégation des résultats
 dataset_cleaned <- dataset %>%
-  group_by(`Libellé du département`) %>%
+  group_by(`Libellé du département`, `Code du département`) %>%
   summarise(total_votes = sum(Exprimés), 
             total_blancs = sum(Blancs),
             pourcentage_blanc = total_blancs / sum(Votants) * 100, 
@@ -280,3 +279,50 @@ crime_departement_annee <- mutate(crime_departement_annee, taux_crime_par_1000 =
 crime_departement_annee$annee <- as.numeric(paste0("20", crime_departement_annee$annee))
 # Afficher les premières lignes du résultat
 head(crime_departement_annee)
+
+
+data_merged <- merge(crime_departement_annee, dataset_cleaned_filtered, by.x = "CodeDépartement", by.y = "Code du département")
+ggplot(data_merged, aes(x = taux_crime_par_1000, y = pourcentage_macron)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") + # Régression linéaire avec erreur standard
+  labs(title = "Régression linéaire entre taux de crime et votes pour Macron",
+       x = "Taux de crime par 1000 personnes",
+       y = "Pourcentage de votes pour Macron") +
+  theme_minimal()
+
+ggplot(data_merged, aes(x = taux_crime_par_1000, y = pourcentage_lepen)) +
+  geom_point(alpha = 0.5) + 
+  geom_smooth(method = "lm", se = TRUE, color = "blue") + # Régression linéaire avec erreur standard
+  labs(title = "Régression linéaire entre taux de crime et votes pour Lepen",
+       x = "Taux de crime par 1000 personnes",
+       y = "Pourcentage de votes pour Lepen") +
+  theme_minimal()
+
+data_merged$annee <- as.factor(data_merged$annee) # Année est un facteur du dataset
+
+valeurs_pch <- setNames(c(0, 1, 2, 3, 4, 5, 6, 7), levels(data_merged$annee)) # Map de l'année vers des valeurs PCH (attendues pour les formes sur le graphique)
+
+# Creating the overlay plot
+ggplot(data_merged, aes(x = taux_crime_par_1000)) + # Valeur commune sur x, le taux de crime
+  geom_point(aes(y = pourcentage_macron, color = "Macron", shape = annee), alpha = 0.5) +  # Pourcentages Macron
+  geom_smooth(aes(y = pourcentage_macron, color = "Macron"), method = "lm", se = TRUE) +  # Regression linéaire pour Macron
+  
+  geom_point(aes(y = pourcentage_lepen, color = "Le Pen", shape = annee), alpha = 0.5) +  # Pourcentages Le Pen
+  geom_smooth(aes(y = pourcentage_lepen, color = "Le Pen"), method = "lm", se = TRUE) +  # Regression linéaire pour LePen
+  
+  geom_point(aes(y = pourcentage_zemmour, color ="Zemmour", shape = annee) , alpha = 0.5) +  # Pourcentages Zemmour
+  geom_smooth(aes(y = pourcentage_zemmour, color ="Zemmour"), method = "lm", se = TRUE) +  # Regression linéaire pour Zemmour
+  
+  geom_point(aes(y = pourcentage_melenchon, color ="Mélenchon", shape = annee) , alpha = 0.5) +  # Pourcentages Zemmour
+  geom_smooth(aes(y = pourcentage_melenchon, color ="Mélenchon"), method = "lm", se = TRUE) +  # Regression linéaire pour Zemmour
+  
+  
+  labs(title = "Régression comparative entre le taux de crime et les votes sur les candidats",
+       x = "Taux de crime par 1000 personnes",
+       y = "Pourcentage des votes",
+       color = "Candidat", 
+       shape = "Année") +
+  theme_minimal() +
+  scale_color_manual(values = c("Macron" = "blue", "Le Pen" = "red", "Zemmour" = "green", "Mélenchon" = "purple")) +
+  scale_shape_manual(values = valeurs_pch)
+

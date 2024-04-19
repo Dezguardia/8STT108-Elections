@@ -1,6 +1,0 @@
-"0","etendue = max(moy_votes_candidat) - min(moy_votes_candidat)"
-"0","print(etendue)"
-"1","[1]"
-"1"," 89588.45"
-"1","
-"
