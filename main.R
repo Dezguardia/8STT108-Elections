@@ -319,8 +319,11 @@ dataset_chomage_filtered <- dataset_chomage_filtered %>%
 # Affichage des premières lignes du résultat
 head(dataset_chomage_filtered)
 
-data_merged <- merge(crime_departement_annee, dataset_cleaned_filtered, by.x = "CodeDépartement", by.y = "Code du département")
-ggplot(data_merged, aes(x = taux_crime_par_1000, y = pourcentage_macron)) +
+# Faire un dataset commun entre les crimes et les votes (jointure par code de département)
+crime_vote_merge <- merge(crime_departement_annee, dataset_cleaned_filtered, by.x = "CodeDépartement", by.y = "Code du département")
+
+# Régression linéaire pour les votes de macron face taux de crime
+ggplot(crime_vote_merge, aes(x = taux_crime_par_1000, y = pourcentage_macron)) +
   geom_point(alpha = 0.5) +
   geom_smooth(method = "lm", se = TRUE, color = "blue") + # Régression linéaire avec erreur standard
   labs(title = "Régression linéaire entre taux de crime et votes pour Macron",
@@ -328,7 +331,8 @@ ggplot(data_merged, aes(x = taux_crime_par_1000, y = pourcentage_macron)) +
        y = "Pourcentage de votes pour Macron") +
   theme_minimal()
 
-ggplot(data_merged, aes(x = taux_crime_par_1000, y = pourcentage_lepen)) +
+# Régression linéaire pour les votes de LePen face taux de crime
+ggplot(crime_vote_merge, aes(x = taux_crime_par_1000, y = pourcentage_lepen)) +
   geom_point(alpha = 0.5) +
   geom_smooth(method = "lm", se = TRUE, color = "blue") + # Régression linéaire avec erreur standard
   labs(title = "Régression linéaire entre taux de crime et votes pour Lepen",
@@ -336,12 +340,12 @@ ggplot(data_merged, aes(x = taux_crime_par_1000, y = pourcentage_lepen)) +
        y = "Pourcentage de votes pour Lepen") +
   theme_minimal()
 
-data_merged$annee <- as.factor(data_merged$annee) # Année est un facteur du dataset
+crime_vote_merge$annee <- as.factor(crime_vote_merge$annee) # Année est un facteur du dataset
 
-valeurs_pch <- setNames(c(0, 1, 2, 3, 4, 5, 6, 7), levels(data_merged$annee)) # Map de l'année vers des valeurs PCH (attendues pour les formes sur le graphique)
+valeurs_pch <- setNames(c(0, 1, 2, 3, 4, 5, 6, 7), levels(crime_vote_merge$annee)) # Map de l'année vers des valeurs PCH (attendues pour les formes sur le graphique)
 
 # Creating the overlay plot
-ggplot(data_merged, aes(x = taux_crime_par_1000)) + # Valeur commune sur x, le taux de crime
+ggplot(crime_vote_merge, aes(x = taux_crime_par_1000)) + # Valeur commune sur x, le taux de crime
   geom_point(aes(y = pourcentage_macron, color = "Macron", shape = annee), alpha = 0.5) +  # Pourcentages Macron
   geom_smooth(aes(y = pourcentage_macron, color = "Macron"), method = "lm", se = TRUE) +  # Regression linéaire pour Macron
 
@@ -363,3 +367,51 @@ ggplot(data_merged, aes(x = taux_crime_par_1000)) + # Valeur commune sur x, le t
   theme_minimal() +
   scale_color_manual(values = c("Macron" = "blue", "Le Pen" = "red", "Zemmour" = "green", "Mélenchon" = "purple")) +
   scale_shape_manual(values = valeurs_pch)
+
+# Faire un dataset commun entre le chomage et les votes (jointure par code de département)
+chomage_vote_merge <- merge(dataset_chomage_filtered, dataset_cleaned_filtered, by.x = "Code", by.y = "Code du département")
+
+
+analyse <- list()
+for (annee in 2016:2023) {
+  moyenne_col <- paste0("Moyenne_", annee)  # Boucle de nom de colonne pour obtenir une liste : "Moyenne_2016", Moyenne_2017", ...
+  formule <- as.formula(paste("pourcentage_macron ~", moyenne_col))
+  modele <- lm(formule, data = chomage_vote_merge)
+  analyse[[paste("Macron", year)]] <- summary(modele)
+}
+
+# Afficher les résultats pour Macron pour chaque année
+analyse
+
+# Graphique présentant les résultats de vote pour macron selon le chômage en 2023
+ggplot(chomage_vote_merge, aes_string(x = "Moyenne_2023", y = "pourcentage_macron")) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  labs(title = "Régression linéaire entre les taux de chômage et les votes pour Macron en 2023",
+       x = "Moyenne du Taux de Chômage 2023",
+       y = "Pourcentage des Votes pour Macron")
+
+# Mise en place d'une moyenne de chomage globale (2016 à 2023)
+moyenne_columns <- grep("Moyenne_", names(chomage_vote_merge), value = TRUE) # Toutes les colonnes qui sont une moyenne d'année 
+chomage_vote_merge$Moyenne_Total <- rowMeans(chomage_vote_merge[, moyenne_columns], na.rm = TRUE) # Ajout d'une colonne de moyenne globale
+
+# Tracer le graphique en utilisant `as.factor(annee)` pour être sûr que c'est traité comme catégorique
+ggplot(chomage_vote_merge, aes(x = Moyenne_Total)) +
+  geom_point(aes(y = pourcentage_macron, color = "Macron"), alpha = 0.5) +
+  geom_smooth(aes(y = pourcentage_macron, color = "Macron"), method = "lm", se = TRUE) +
+  
+  geom_point(aes(y = pourcentage_lepen, color = "Le Pen"), alpha = 0.5) +
+  geom_smooth(aes(y = pourcentage_lepen, color = "Le Pen"), method = "lm", se = TRUE) +
+  
+  geom_point(aes(y = pourcentage_zemmour, color = "Zemmour"), alpha = 0.5) +
+  geom_smooth(aes(y = pourcentage_zemmour, color = "Zemmour"), method = "lm", se = TRUE) +
+  
+  geom_point(aes(y = pourcentage_melenchon, color = "Mélenchon"), alpha = 0.5) +
+  geom_smooth(aes(y = pourcentage_melenchon, color = "Mélenchon"), method = "lm", se = TRUE) +
+  
+  labs(title = "Régression comparative entre le taux de chômage et les votes pour les candidats",
+       x = "Moyenne du taux de chômage",
+       y = "Pourcentage des votes",
+       color = "Candidat") +
+  theme_minimal() +
+  scale_color_manual(values = c("Macron" = "blue", "Le Pen" = "red", "Zemmour" = "green", "Mélenchon" = "purple"))
