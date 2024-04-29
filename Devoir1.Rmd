@@ -471,3 +471,98 @@ dataset_chomage_filtered <- dataset_chomage_filtered %>%
   filter(!Code %in% c(971, 972, 973, 974))
 head(dataset_chomage_filtered)
 ```
+
+## II. Relation entre les taux de crime, de chômage et les résultats des votes
+
+Ici, nous explorons la relation entre les taux de crime, de chômage et les résultats des votes pour trois candidats politiques lors des élections présidentielles en France entre 2016 et 2023 : Emmanuel Macron, Marine Le Pen et Jean-Luc Mélenchon. Nous examinons comment ces facteurs sont liés aux résultats électoraux de ces candidats.
+
+Nous avons effectué des régressions linéaires pour étudier les relations entre les taux de crime et de chômage et les résultats des votes pour Macron, Le Pen et Mélenchon.
+
+### a. Régressions linéaires entre taux de crime et résultats des votes
+
+### Pourcentage des votes pour Macron, Le Pen et Mélenchon en fonction des taux de crime
+
+```{r}
+library(dplyr)
+
+# Sélection des colonnes à conserver (code, libellé et moyennes)
+cols_to_keep <- c("Code", "Libellé", paste0("Moyenne_", 2016:2023))
+
+# Faire un dataset commun entre les crimes et les votes (jointure par code de département)
+crime_vote_merge <- merge(crime_departement_annee, dataset_cleaned_filtered, by.x = "CodeDépartement", by.y = "Code du département")
+
+crime_vote_merge$annee <- as.factor(crime_vote_merge$annee) # Année est un facteur du dataset
+
+valeurs_pch <- setNames(c(0, 1, 2, 3, 4, 5, 6, 7), levels(crime_vote_merge$annee)) # Map de l'année vers des valeurs PCH (attendues pour les formes sur le graphique)
+
+# Creating the overlay plot
+ggplot(crime_vote_merge, aes(x = taux_crime_par_1000)) + # Valeur commune sur x, le taux de crime
+  geom_point(aes(y = pourcentage_macron, color = "Macron", shape = annee), alpha = 0.5) +  # Pourcentages Macron
+  geom_smooth(aes(y = pourcentage_macron, color = "Macron"), method = "lm", se = TRUE) +  # Regression linéaire pour Macron
+
+  geom_point(aes(y = pourcentage_lepen, color = "Le Pen", shape = annee), alpha = 0.5) +  # Pourcentages Le Pen
+  geom_smooth(aes(y = pourcentage_lepen, color = "Le Pen"), method = "lm", se = TRUE) +  # Regression linéaire pour LePen
+
+  geom_point(aes(y = pourcentage_melenchon, color ="Mélenchon", shape = annee) , alpha = 0.5) +  # Pourcentages Melanchon
+  geom_smooth(aes(y = pourcentage_melenchon, color ="Mélenchon"), method = "lm", se = TRUE) +  # Regression linéaire pour Melanchon
+
+
+  labs(title = "Régression comparative entre le taux de crime et les votes sur les candidats",
+       x = "Taux de crime par 1000 personnes",
+       y = "Pourcentage des votes",
+       color = "Candidat",
+       shape = "Année") +
+  theme_minimal() +
+  scale_color_manual(values = c("Macron" = "blue", "Le Pen" = "red", "Mélenchon" = "purple")) +
+  scale_shape_manual(values = valeurs_pch)
+
+# Faire un dataset commun entre le chomage et les votes (jointure par code de département)
+chomage_vote_merge <- merge(dataset_chomage_filtered, dataset_cleaned_filtered, by.x = "Code", by.y = "Code du département")
+```
+
+Ce graphique nous permet de comparer les tendances des votes pour les trois candidats face aux taux de crime. Il inclut également une différenciation selon l'année. On voit ici que Mélanchon a un taux de criminalité plus élevé parmis ses électeurs en comparaison aux deux autres candidats. On peut déduire ici que Mélanchon est principalement voté dans les villes, où la majeure partie des crimes sont concentrés. On constate l'opposé pour Le Pen, plus votée dans les campagnes.
+
+### b. Régressions linéaires entre taux de chômage et résultats des votes
+
+### Pourcentage des votes pour Macron, Le Pen et Mélenchon en fonction des taux de chômage
+
+```{r}
+# Faire un dataset commun entre le chomage et les votes (jointure par code de département)
+chomage_vote_merge <- merge(dataset_chomage_filtered, dataset_cleaned_filtered, by.x = "Code", by.y = "Code du département")
+
+
+# Mise en place d'une moyenne de chomage globale (2016 à 2023)
+moyenne_columns <- grep("Moyenne_", names(chomage_vote_merge), value = TRUE) # Toutes les colonnes qui sont une moyenne d'année 
+chomage_vote_merge$Moyenne_Total <- rowMeans(chomage_vote_merge[, moyenne_columns], na.rm = TRUE) # Ajout d'une colonne de moyenne globale
+
+# Tracer le graphique en utilisant `as.factor(annee)` pour être sûr que c'est traité comme catégorique
+ggplot(chomage_vote_merge, aes(x = Moyenne_Total)) +
+  geom_point(aes(y = pourcentage_macron, color = "Macron"), alpha = 0.5) +
+  geom_smooth(aes(y = pourcentage_macron, color = "Macron"), method = "lm", se = TRUE) +
+  
+  geom_point(aes(y = pourcentage_lepen, color = "Le Pen"), alpha = 0.5) +
+  geom_smooth(aes(y = pourcentage_lepen, color = "Le Pen"), method = "lm", se = TRUE) +
+  
+  geom_point(aes(y = pourcentage_zemmour, color = "Zemmour"), alpha = 0.5) +
+  geom_smooth(aes(y = pourcentage_zemmour, color = "Zemmour"), method = "lm", se = TRUE) +
+  
+  geom_point(aes(y = pourcentage_melenchon, color = "Mélenchon"), alpha = 0.5) +
+  geom_smooth(aes(y = pourcentage_melenchon, color = "Mélenchon"), method = "lm", se = TRUE) +
+  
+  labs(title = "Régression comparative entre le taux de chômage et les votes pour les candidats",
+       x = "Moyenne du taux de chômage",
+       y = "Pourcentage des votes",
+       color = "Candidat") +
+  theme_minimal() +
+  scale_color_manual(values = c("Macron" = "blue", "Le Pen" = "red", "Zemmour" = "green", "Mélenchon" = "purple"))
+
+```
+
+
+Ce graphique nous permet de comparer les tendances des votes pour les trois candidats face au taux de chômage. On voit ici que Le Pen a un taux de chômage plus élevé parmis ses électeurs en comparaison aux deux autres candidats. Comme dit précédemment, Le Pen est principalement voté dans les campagnes, où la le taux de chômage y est plus élevé. On constate l'opposé pour Mélanchon, plus votée dans les villes, et Macron, voté partout en France.
+
+### Conclusion`
+
+Les analyses effectuées mettent en lumière les relations entre les taux de crime, de chômage et les résultats des votes pour Macron, Le Pen et Mélenchon. Ces résultats suggèrent comment ces facteurs peuvent influencer les préférences politiques des électeurs.
+
+Nous pouvons approfondir notre étude en examinant d'autres variables telles que l'éducation ou l'économie pour obtenir une perspective plus complète de l'impact de ces facteurs sur les résultats des élections.
