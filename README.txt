@@ -1,7 +1,3 @@
-Le script R principal est le fichier main.R
-
-Le document généré en R Markdown est Devoir1.html
-
-La vidéo est le fichier mp4 commençant par 8STT108.
-
-La présentation est le fichier Powerpoint.
+# About this project
+University project for a data analysis class at the University of Québec in Chicoutimi, Canada.
+It consists in an analysis of the results of the first round of the 2022 presidential election in France, using vizualisations and linear regressions.
